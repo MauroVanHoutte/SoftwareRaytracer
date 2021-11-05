@@ -38,6 +38,7 @@ Elite::Renderer::Renderer(SDL_Window * pWindow)
 
 Elite::Renderer::~Renderer()
 {
+	//
 }
 
 
@@ -59,7 +60,7 @@ void Elite::Renderer::Render(const Camera* camera)
 	const std::vector<Light*> lightVector = LightManager::GetInstance()->GetLightVector(); //caching lights
 	//Loop over all the pixels
 	
-	int rowsPerThread = m_Height / threadManager->GetNrThreads();
+	size_t rowsPerThread = m_Height / threadManager->GetNrThreads();
 
 	//Ray ray{ {}, {} }; //initialising ray that will be reused for every pixel
 	//Ray shadowRay{ {}, {} };
@@ -113,7 +114,7 @@ void Elite::Renderer::Render(const Camera* camera)
 	//	}
 	//}
 	
-	for (uint32_t r = 0; r < m_Height; r += rowsPerThread)
+	for (uint32_t r = 0; r < m_Height; r += uint32_t(rowsPerThread))
 	{
 		threadManager->AddJob([cameraData, objectVector, lightVector, r, rowsPerThread, this]() {
 

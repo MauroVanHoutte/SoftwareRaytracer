@@ -3,7 +3,7 @@
 
 Elite::RGBColor BRDF::Lambert(const Elite::RGBColor& diffuseReflectance, const Elite::RGBColor& diffuseColor)
 {
-	return diffuseColor*diffuseReflectance/M_PI;
+	return diffuseColor*diffuseReflectance/float(M_PI);
 }
 
 Elite::RGBColor BRDF::Phong(float specularReflectance, float phongExponent, const Elite::FVector3& lightDirection, const Elite::FVector3& viewDirection, const Elite::FVector3& hitNormal)
