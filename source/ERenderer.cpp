@@ -116,7 +116,7 @@ void Elite::Renderer::Render(const Camera* camera)
 	
 	for (uint32_t r = 0; r < m_Height; r += uint32_t(rowsPerThread))
 	{
-		threadManager->AddJob([cameraData, objectVector, lightVector, r, rowsPerThread, this]() {
+		threadManager->AddJob([&cameraData, &objectVector, &lightVector, r, rowsPerThread, this]() {
 
 			Ray ray{ {}, {} }; //initialising ray that will be reused for every pixel
 			Ray shadowRay{ {}, {} };
