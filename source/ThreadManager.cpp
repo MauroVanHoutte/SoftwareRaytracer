@@ -59,7 +59,7 @@ void ThreadManager::Destroy()
     delete m_Instance;
 }
 
-size_t ThreadManager::GetNrThreads()
+uint32_t ThreadManager::GetNrThreads()
 {
     return m_Threads.size();
 }

@@ -16,7 +16,7 @@ public:
 
 	void Destroy();
 
-	size_t GetNrThreads();
+	uint32_t GetNrThreads();
 
 private:
 

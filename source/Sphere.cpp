@@ -33,6 +33,13 @@ bool Sphere::Hit(const Ray& ray, HitRecord& hitRecord) const
 			hitRecord = HitRecord{ true, pIntersect, t, (pIntersect-m_Origin)/m_Radius, m_pMaterial };
 			return true;
 		}
+		t = (-argumentB + sqrtf(Discriminant)) / (2 * argumentA);
+		if (ray.tMin < t && t < hitRecord.t)
+		{
+			Elite::FPoint3 pIntersect{ ray.origin + t * ray.direction };
+			hitRecord = HitRecord{ true, pIntersect, t, (pIntersect - m_Origin) / m_Radius, m_pMaterial };
+			return true;
+		}
 	}
 	return false;
 

@@ -65,24 +65,24 @@ int main(int argc, char* args[])
 	TriangleMesh* pBunny{ new TriangleMesh{ "teapot.obj", new LambertCookTorrance{ true, 0.6f, Elite::RGBColor{0.955f, 0.638f, 0.538f} }, {0.f, 0.f, 0.f}, {0.f, 0.f, 1.f}, CullingMode::None }};
 	ObjectManager::GetInstance()->AddTriangleMesh(pBunny);
 #else
-	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{-2.5f, 1.f, 0.f}, 1.f, new LambertCookTorrance{ true, 0.1f, Elite::RGBColor{0.f, 0.f, 1.f} } });
-	//ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{0.f, 1.f, 0.f}, 1.f, new LambertCookTorrance{ false, 0.6f } });
-	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{2.5f, 1.f, 0.f}, 1.f, new LambertCookTorrance{ true, 0.7f, Elite::RGBColor{0.f, 1.f, 0.f} } });
-	//ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{-2.f, 3.f, 0.f}, 1.f, new LambertCookTorrance{ true, 0.1f, Elite::RGBColor{0.955f, 0.638f, 0.538f} } });
-	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{0.f, 1.f, 0.f}, 1.f, new LambertCookTorrance{ true, 1.f, Elite::RGBColor{0.955f, 0.638f, 0.538f} } });
-	//ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{2.f, 3.f, 0.f}, 1.f, new LambertCookTorrance{ true, 1.f, Elite::RGBColor{0.955f, 0.638f, 0.538f} } });
-	//TriangleMesh* pTriangle0{ new TriangleMesh{ "tri1.obj", new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}}, {3.f, 5.f, 0.f}, {0.f, 0.f, 1.f}, CullingMode::Front } };
-	//TriangleMesh* pTriangle1{ new TriangleMesh{ "tri1.obj", new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}}, {0.f, 5.f, 0.f}, {0.f, 0.f, 1.f}, CullingMode::Back } };
-	//TriangleMesh* pTriangle2{ new TriangleMesh{ "tri1.obj", new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}}, {-3.f, 5.f, 0.f}, {0.f, 0.f, 1.f}, CullingMode::None } };
-	//ObjectManager::GetInstance()->AddTriangleMesh(pTriangle0);
-	//ObjectManager::GetInstance()->AddTriangleMesh(pTriangle1);
-	//ObjectManager::GetInstance()->AddTriangleMesh(pTriangle2);
+	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{-2.5f, 1.f, 0.f}, 1.f, new LambertCookTorrance{ false, 0.1f} });
+	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{0.f, 1.f, 0.f}, 1.f, new LambertCookTorrance{ false, 0.6f } });
+	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{2.5f, 1.f, 0.f}, 1.f, new LambertCookTorrance{ false, 1.f } });
+	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{-2.5f, 3.f, 0.f}, 1.f, new LambertCookTorrance{ true, 0.1f, Elite::RGBColor{0.955f, 0.638f, 0.538f} } });
+	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{0.f, 3.f, 0.f}, 1.f, new LambertCookTorrance{ true, 0.6f, Elite::RGBColor{0.955f, 0.638f, 0.538f} } });
+	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{2.5f, 3.f, 0.f}, 1.f, new LambertCookTorrance{ true, 1.f, Elite::RGBColor{0.955f, 0.638f, 0.538f} } });
+	TriangleMesh* pTriangle0{ new TriangleMesh{ "tri1.obj", new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}}, {3.f, 5.f, 0.f}, {0.f, 0.f, 1.f}, CullingMode::Front } };
+	TriangleMesh* pTriangle1{ new TriangleMesh{ "tri1.obj", new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}}, {0.f, 5.f, 0.f}, {0.f, 0.f, 1.f}, CullingMode::Back } };
+	TriangleMesh* pTriangle2{ new TriangleMesh{ "tri1.obj", new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}}, {-3.f, 5.f, 0.f}, {0.f, 0.f, 1.f}, CullingMode::None } };
+	ObjectManager::GetInstance()->AddTriangleMesh(pTriangle0);
+	ObjectManager::GetInstance()->AddTriangleMesh(pTriangle1);
+	ObjectManager::GetInstance()->AddTriangleMesh(pTriangle2);
 
 #endif // 
 	ObjectManager::GetInstance()->AddPlane(new Plane{ Elite::FPoint3{0.f, 0.f, 0.f}, Elite::FVector3{0.f, 1.f, 0.f}, new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}} });
-	//ObjectManager::GetInstance()->AddPlane(new Plane{ Elite::FPoint3{0.f, 0.f, -5.f}, Elite::FVector3{0.f, 0.f, 1.f}, new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}} });
-	//ObjectManager::GetInstance()->AddPlane(new Plane{ Elite::FPoint3{-5.f, 0.f, 0.f}, Elite::FVector3{1.f, 0.f, 0.f}, new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}} });
-	//ObjectManager::GetInstance()->AddPlane(new Plane{ Elite::FPoint3{5.f, 0.f, 0.f}, Elite::FVector3{-1.f, 0.f, 0.f}, new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}} });
+	ObjectManager::GetInstance()->AddPlane(new Plane{ Elite::FPoint3{0.f, 0.f, -5.f}, Elite::FVector3{0.f, 0.f, 1.f}, new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}} });
+	ObjectManager::GetInstance()->AddPlane(new Plane{ Elite::FPoint3{-5.f, 0.f, 0.f}, Elite::FVector3{1.f, 0.f, 0.f}, new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}} });
+	ObjectManager::GetInstance()->AddPlane(new Plane{ Elite::FPoint3{5.f, 0.f, 0.f}, Elite::FVector3{-1.f, 0.f, 0.f}, new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}} });
 
 	LightManager::GetInstance()->AddPointLight(new PointLight{ Elite::FPoint3{3.f, 7.f, 5.f}, Elite::RGBColor{1.f, 0.5f, 1.f}, 150.f });
 	LightManager::GetInstance()->AddPointLight(new PointLight{ Elite::FPoint3{-3.f, 3.f, 4.f}, Elite::RGBColor{0.6f, 0.6f, 1.f}, 45.f });
@@ -135,18 +135,25 @@ int main(int argc, char* args[])
 				{
 					pRenderer->DecreaseBounces();
 				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_T)
+				{
+					pRenderer->ToggleRenderMode();
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_Z)
+				{
+					pRenderer->ToggleShadows();
+				}
 			}
 		}
 
 		//--------- Render ---------
 		m_pCamera->Update(pTimer->GetElapsed());
-		pRenderer->UpdateRenderOptions();
 		pRenderer->Render(m_pCamera);
 	
 #ifndef BunnyScene
-		//pTriangle0->Rotate(pTimer->GetElapsed());
-		//pTriangle1->Rotate(pTimer->GetElapsed());
-		//pTriangle2->Rotate(pTimer->GetElapsed());
+		pTriangle0->Rotate(pTimer->GetElapsed());
+		pTriangle1->Rotate(pTimer->GetElapsed());
+		pTriangle2->Rotate(pTimer->GetElapsed());
 #endif // !BunnyScene
 
 

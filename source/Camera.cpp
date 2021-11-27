@@ -30,32 +30,28 @@ void Camera::HandleMouseMovement()
 	float displacementY{ float(currentMousePos.y) }; 
 	float angleScalingFactor{ 10.f };
 	bool moved{ false };
+
+	Elite::FVector3 up{m_CameraData.ONB[1]};
+
 	if ((mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) && (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT)))
 	{
-		Elite::FVector3 up;
-		up.x = m_CameraData.ONB[1].x;
-		up.y = m_CameraData.ONB[1].y;
-		up.z = m_CameraData.ONB[1].z;
-		m_CameraData.pos += up * (displacementY); //move along the camera's up vector 
+		m_CameraData.pos -= up * (displacementY); //move along the camera's up vector 
 		moved = true;
-	} 
-
+	} else 
 	if (mouseState == SDL_BUTTON(SDL_BUTTON_LEFT))
 	{
-		m_CameraData.forward = Elite::GetNormalized(Elite::MakeRotationY(Elite::ToRadians(displacementX/angleScalingFactor)) * m_CameraData.forward); //rotate around m_Forward's y component
+		m_CameraData.forward = Elite::GetNormalized(Elite::MakeRotationY(-Elite::ToRadians(displacementX/angleScalingFactor)) * m_CameraData.forward); //rotate around m_Forward's y component
 		m_CameraData.pos += m_CameraData.forward * displacementY; //move along camera's forward vector
 		moved = true;
-	} 
-
+	} else
 	if (mouseState == SDL_BUTTON(SDL_BUTTON_RIGHT))
 	{
-		m_CameraData.forward = Elite::GetNormalized(Elite::MakeRotationY(Elite::ToRadians(-displacementX / angleScalingFactor)) * m_CameraData.forward); //rotate around m_Forward's y component
-		
-		if (m_CameraData.forward.z > 0)
-			m_CameraData.forward = Elite::GetNormalized(Elite::MakeRotationX(Elite::ToRadians(-displacementY / angleScalingFactor)) * m_CameraData.forward); //rotate around m_Forward's x component
-		else
-			m_CameraData.forward = Elite::GetNormalized(Elite::MakeRotationX(Elite::ToRadians(displacementY / angleScalingFactor)) * m_CameraData.forward); //rotate around m_Forward's x component
+		Elite::FVector3 right{ m_CameraData.ONB[0] };
 
+		m_CameraData.forward = Elite::GetNormalized(Elite::MakeRotation(Elite::ToRadians(-displacementY / angleScalingFactor), m_CameraData.ONB[0].xyz) * m_CameraData.forward);		
+		
+		m_CameraData.forward = Elite::GetNormalized(Elite::MakeRotation(Elite::ToRadians(-displacementX / angleScalingFactor), m_CameraData.ONB[1].xyz) * m_CameraData.forward); //rotate around m_Forward's y component
+		
 		moved = true;
 	}
 

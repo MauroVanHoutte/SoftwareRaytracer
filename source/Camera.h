@@ -39,7 +39,7 @@ private:
 
 	CameraData m_CameraData;
 
-	float m_FOVAngle = float(M_PI / 4.f);
+	float m_FOVAngle = float(M_PI / 3.f);
 	float m_S = 1.f;
 
 	float m_MoveSpeed = 50.f;

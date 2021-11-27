@@ -17,6 +17,7 @@
 #include "PointLight.h"
 #include "ThreadManager.h"
 #include <iostream>
+#include <numeric>
 
 
 Elite::Renderer::Renderer(SDL_Window * pWindow)
@@ -33,16 +34,16 @@ Elite::Renderer::Renderer(SDL_Window * pWindow)
 	m_pBackBuffer = SDL_CreateRGBSurface(0, m_Width, m_Height, 32, 0, 0, 0, 0);
 	m_pBackBufferPixels = (uint32_t*)m_pBackBuffer->pixels;
 
-	m_FinishedThreads.resize(m_Height, false);
+	uint32_t nrThreads = ThreadManager::GetInstance()->GetNrThreads();
+	m_FinishedJobs.resize(nrThreads, false);
+	m_HitsPerJob.resize(nrThreads, 0);
+	m_RowsPerJob.resize(nrThreads, m_Height/nrThreads);
+	m_SecsPerJob.resize(nrThreads, 0);
 }
 
 Elite::Renderer::~Renderer()
 {
-	//
 }
-
-
-void SetupRay(Ray& ray, int row, int col, uint32_t width, uint32_t height, const CameraData& cameraData);
 
 void Elite::Renderer::Render(const Camera* camera)
 {
@@ -52,169 +53,32 @@ void Elite::Renderer::Render(const Camera* camera)
 
 	auto threadManager = ThreadManager::GetInstance();
 
-	m_FinishedThreads.resize(threadManager->GetNrThreads(), false);
-	std::fill(m_FinishedThreads.begin(), m_FinishedThreads.end(), false);
+	std::fill(m_FinishedJobs.begin(), m_FinishedJobs.end(), false);
+	std::fill(m_HitsPerJob.begin(), m_HitsPerJob.end(), 0);
 
 	const CameraData cameraData{ camera->GetCameraData() }; //caching this frames camera values
 	const std::vector<RenderObject*> objectVector = ObjectManager::GetInstance()->GetObjectVector(); //caching objects
 	const std::vector<Light*> lightVector = LightManager::GetInstance()->GetLightVector(); //caching lights
 	//Loop over all the pixels
 	
-	size_t rowsPerThread = m_Height / threadManager->GetNrThreads();
-
-	//Ray ray{ {}, {} }; //initialising ray that will be reused for every pixel
-	//Ray shadowRay{ {}, {} };
-	//HitRecord firstHit{ false, Elite::FPoint3{0.f, 0.f, 0.f}, ray.tMax, Elite::FVector3{0.f, 0.f, 0.f}, nullptr }; //initialising hitrecord that will be used for every pixel
-
-	//for (uint32_t row = 0; row < m_Height; row++)
-	//{
-	//	for (uint32_t col = 0; col < m_Width; ++col)
-	//	{
-	//		SetupRay(ray, row, col, m_Width, m_Height, cameraData);
-	//		firstHit.hit = false;
-	//		firstHit.t = ray.tMax;
-
-	//		Elite::RGBColor pixelColor{ 0.f, 0.f, 0.f };
-	//		for (const RenderObject* object : objectVector) // checking if the ray intersects with any objects
-	//		{
-	//			object->Hit(ray, firstHit); // keeping the hitrecord of object closest to the ray origin
-	//		}
-	//		if (firstHit.hit)
-	//		{
-	//			CalculateIrradiance(lightVector, objectVector, shadowRay, firstHit, ray, pixelColor); //counting up Radiance of all lights
-	//			int bounces{ 0 };
-	//			while (bounces < m_MaxReflectionBounces)
-	//			{
-	//				++bounces;
-	//				Ray reflectRay{};
-	//				HitRecord reflectHit{ false, Elite::FPoint3{0.f, 0.f, 0.f}, reflectRay.tMax, Elite::FVector3{0.f, 0.f, 0.f}, nullptr };
-	//				reflectRay.direction = Elite::Reflect(ray.direction, firstHit.normal);
-	//				reflectRay.origin = firstHit.pIntersect;
-	//				reflectRay.tMin = 0.01f;
-	//				for (const RenderObject* object : objectVector)
-	//				{
-	//					object->Hit(reflectRay, reflectHit);
-	//				}
-	//				if (reflectHit.hit)
-	//				{
-	//					Elite::RGBColor reflectColor;
-	//					CalculateIrradiance(lightVector, objectVector, shadowRay, reflectHit, reflectRay, reflectColor);
-	//					pixelColor += reflectColor * 0.1f;
-	//					firstHit = reflectHit;
-	//				}
-	//				else
-	//					break;
-	//			}
-	//			pixelColor.MaxToOne();
-	//			m_pBackBufferPixels[col + (row * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
-	//				static_cast<uint8_t>(pixelColor.r * 255),
-	//				static_cast<uint8_t>(pixelColor.g * 255),
-	//				static_cast<uint8_t>(pixelColor.b * 255));
-	//		}
-	//	}
-	//}
-	
-	for (uint32_t r = 0; r < m_Height; r += uint32_t(rowsPerThread))
+	int startRow = 0;
+	for (uint32_t t = 0; t < threadManager->GetNrThreads(); t ++)
 	{
-		threadManager->AddJob([&cameraData, &objectVector, &lightVector, r, rowsPerThread, this]() {
-
-			Ray ray{ {}, {} }; //initialising ray that will be reused for every pixel
-			Ray shadowRay{ {}, {} };
-			HitRecord firstHit{ false, Elite::FPoint3{0.f, 0.f, 0.f}, ray.tMax, Elite::FVector3{0.f, 0.f, 0.f}, nullptr }; //initialising hitrecord that will be used for every pixel
-
-			for (uint32_t row = r; row < r + rowsPerThread; row++)
-			{
-				for (uint32_t col = 0; col < m_Width; ++col)
-				{
-					SetupRay(ray, row, col, m_Width, m_Height, cameraData);
-					firstHit.hit = false;
-					firstHit.t = ray.tMax;
-
-					Elite::RGBColor pixelColor{ 0.f, 0.f, 0.f };
-					for (const RenderObject* object : objectVector) // checking if the ray intersects with any objects
-					{
-						object->Hit(ray, firstHit); // keeping the hitrecord of object closest to the ray origin
-					}
-					if (firstHit.hit)
-					{
-						CalculateIrradiance(lightVector, objectVector, shadowRay, firstHit, ray, pixelColor); //counting up Radiance of all lights
-						int bounces{ 0 };
-						while (bounces < m_MaxReflectionBounces)
-						{
-							++bounces;
-							Ray reflectRay{};
-							HitRecord reflectHit{ false, Elite::FPoint3{0.f, 0.f, 0.f}, reflectRay.tMax, Elite::FVector3{0.f, 0.f, 0.f}, nullptr };
-							reflectRay.direction = Elite::Reflect(ray.direction, firstHit.normal);
-							reflectRay.origin = firstHit.pIntersect;
-							reflectRay.tMin = 0.01f;
-							for (const RenderObject* object : objectVector)
-							{
-								object->Hit(reflectRay, reflectHit);
-							}
-							if (reflectHit.hit)
-							{
-								Elite::RGBColor reflectColor;
-								CalculateIrradiance(lightVector, objectVector, shadowRay, reflectHit, reflectRay, reflectColor);
-								pixelColor += reflectColor * 0.1f;
-								firstHit = reflectHit;
-							}
-							else
-								break;
-						}
-						pixelColor.MaxToOne();
-						m_pBackBufferPixels[col + (row * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
-							static_cast<uint8_t>(pixelColor.r * 255),
-							static_cast<uint8_t>(pixelColor.g * 255),
-							static_cast<uint8_t>(pixelColor.b * 255));
-					}
-				}
-			}
-			m_FinishedThreads[r / rowsPerThread] = true;
-		});
+		int jobRows = m_RowsPerJob[t];
+		threadManager->AddJob(std::bind(&Elite::Renderer::RenderScreenPortion, this, cameraData, objectVector, lightVector, startRow, jobRows, t));
+		startRow += m_RowsPerJob[t];
 	}
 
-	while (true)
+	while(true)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		if (std::all_of(m_FinishedThreads.begin(), m_FinishedThreads.end(), [](bool b) {return b; }))
+		std::this_thread::sleep_for(std::chrono::microseconds(5));
+		if (std::all_of(m_FinishedJobs.begin(), m_FinishedJobs.end(), [](bool b) {return b; }))
 			break;
 	}
 
 	SDL_UnlockSurface(m_pBackBuffer);
 	SDL_BlitSurface(m_pBackBuffer, 0, m_pFrontBuffer, 0);
 	SDL_UpdateWindowSurface(m_pWindow);
-}
-
-void Elite::Renderer::UpdateRenderOptions()
-{
-	auto keyStates = SDL_GetKeyboardState(nullptr);
-	if (keyStates[SDL_SCANCODE_L])
-	{
-		LightManager::GetInstance()->ToggleLight(0);
-	}
-	if (keyStates[SDL_SCANCODE_K])
-	{
-		LightManager::GetInstance()->ToggleLight(1);
-	}
-	if (keyStates[SDL_SCANCODE_J])
-	{
-		LightManager::GetInstance()->ToggleLight(2);
-	}
-
-	if (keyStates[SDL_SCANCODE_Z])
-	{
-		m_HardShadowsEnabled = !m_HardShadowsEnabled;
-	}
-
-	if (keyStates[SDL_SCANCODE_T])
-	{
-		if (m_RenderMode == RenderMode::All)
-		{
-			m_RenderMode = RenderMode::IrradianceOnly;
-		} 
-		else
-			m_RenderMode = RenderMode(int(m_RenderMode) + 1);
-	}
 }
 
 bool Elite::Renderer::SaveBackbufferToImage() const
@@ -236,6 +100,21 @@ void Elite::Renderer::DecreaseBounces()
 	--m_MaxReflectionBounces;
 }
 
+void Elite::Renderer::ToggleShadows()
+{
+	m_HardShadowsEnabled = !m_HardShadowsEnabled;
+}
+
+void Elite::Renderer::ToggleRenderMode()
+{
+	if (m_RenderMode == RenderMode::All)
+	{
+		m_RenderMode = RenderMode::IrradianceOnly;
+	}
+	else
+		m_RenderMode = RenderMode(int(m_RenderMode) + 1);
+}
+
 void Elite::Renderer::ResetBackbuffer()
 {
 	for (uint32_t r = 0; r < m_Height; r++)
@@ -250,12 +129,12 @@ void Elite::Renderer::ResetBackbuffer()
 	}
 }
 
-void SetupRay(Ray& ray, int row, int col, uint32_t width, uint32_t height, const CameraData& cameraData)
+void Elite::Renderer::SetupRay(Ray& ray, int row, int col, const CameraData& cameraData)
 {
-	float yScreenSpace{ 1 - (2 * (row + 0.5f) / float(height)) };
+	float yScreenSpace{ 1 - (2 * (row + 0.5f) / float(m_Height)) };
 	float yCameraSpace{ yScreenSpace * cameraData.fov };
 
-	float xScreenSpace{ (2 * (col + 0.5f) / float(width)) - 1 };
+	float xScreenSpace{ (2 * (col + 0.5f) / float(m_Width)) - 1 };
 	float xCameraSpace{ xScreenSpace * cameraData.fov * cameraData.aspectRatio };
 
 	ray.origin.x = xCameraSpace; //ray coordinates in cameraSpace
@@ -302,7 +181,6 @@ void Elite::Renderer::CalculateIrradiance(const std::vector<Light*>& lightVector
 				}
 			}
 
-
 			if (!shadowHit)
 			{
 				float LambertCosine{ Elite::Dot(firstHit.normal, light->GetDirection(firstHit.pIntersect, shadowRay.tMax)) };
@@ -324,4 +202,84 @@ void Elite::Renderer::CalculateIrradiance(const std::vector<Light*>& lightVector
 			}
 		}
 	}
+}
+
+void Elite::Renderer::RenderScreenPortion(const CameraData& cameraData, const std::vector<RenderObject*>& objectVector, const std::vector<Light*>& lightVector, int startRow, int jobRows, int threadId)
+{
+	auto startPoint = std::chrono::high_resolution_clock::now();
+
+	Ray ray{ {}, {} }; //initialising ray that will be reused for every pixel
+	Ray shadowRay{ {}, {} };
+	HitRecord firstHit{ false, Elite::FPoint3{0.f, 0.f, 0.f}, ray.tMax, Elite::FVector3{0.f, 0.f, 0.f}, nullptr }; //initialising hitrecord that will be used for every pixel
+
+	for (int row = startRow; row < startRow + jobRows; row++)
+	{
+		for (uint32_t col = 0; col < m_Width; ++col)
+		{
+			SetupRay(ray, row, col, cameraData);
+			firstHit.hit = false;
+			firstHit.t = ray.tMax;
+
+			Elite::RGBColor pixelColor{ 0.f, 0.f, 0.f };
+			for (const RenderObject* object : objectVector) // checking if the ray intersects with any objects
+			{
+				object->Hit(ray, firstHit); // keeping the hitrecord of object closest to the ray origin
+			}
+			if (firstHit.hit)
+			{
+				CalculateIrradiance(lightVector, objectVector, shadowRay, firstHit, ray, pixelColor); //counting up Radiance of all lights
+				int bounces{ 0 };
+				while (bounces < m_MaxReflectionBounces)
+				{
+					++bounces;
+					Ray reflectRay{};
+					HitRecord reflectHit{ false, Elite::FPoint3{0.f, 0.f, 0.f}, reflectRay.tMax, Elite::FVector3{0.f, 0.f, 0.f}, nullptr };
+					reflectRay.direction = Elite::Reflect(ray.direction, firstHit.normal);
+					reflectRay.origin = firstHit.pIntersect;
+					reflectRay.tMin = 0.01f;
+					for (const RenderObject* object : objectVector)
+					{
+						object->Hit(reflectRay, reflectHit);
+					}
+					if (reflectHit.hit)
+					{
+						Elite::RGBColor reflectColor;
+						CalculateIrradiance(lightVector, objectVector, shadowRay, reflectHit, reflectRay, reflectColor);
+						pixelColor += reflectColor * 0.1f; //arbitrary 0.1 here, need to find a formula that decides the value
+						firstHit = reflectHit;
+					}
+					else
+						break;
+				}
+				pixelColor.MaxToOne();
+
+				m_pBackBufferPixels[col + (row * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+					static_cast<uint8_t>(pixelColor.r * 255),
+					static_cast<uint8_t>(pixelColor.g * 255),
+					static_cast<uint8_t>(pixelColor.b * 255));
+			}
+		}
+	}
+
+	auto endPoint = std::chrono::high_resolution_clock::now();
+	m_SecsPerJob[threadId] = std::chrono::duration<float>(endPoint - startPoint).count();
+
+	std::unique_lock<std::mutex> lock(m_FinishedJobsMutex);
+	m_FinishedJobs[threadId] = true;
+}
+
+Elite::RGBColor Elite::Renderer::ShootRay(const Ray& ray, const std::vector<RenderObject*>& objects, const std::vector<Light*>& lights, float refractionIdx, int& bounce)
+{
+	Ray shadowRay{ {}, {} };
+	HitRecord firstHit{ false, Elite::FPoint3{0.f, 0.f, 0.f}, ray.tMax, Elite::FVector3{0.f, 0.f, 0.f}, nullptr };
+
+	for (const RenderObject* object : objects) // checking if the ray intersects with any objects
+	{
+		object->Hit(ray, firstHit); // keeping the hitrecord of object closest to the ray origin
+	}
+	if (true)
+	{
+
+	}
+	
 }

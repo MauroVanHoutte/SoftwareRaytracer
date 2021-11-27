@@ -12,4 +12,6 @@ public:
 
 	Elite::RGBColor virtual Shade(const HitRecord& hitRecord, const Elite::FVector3& incoming, const Elite::FVector3& outgoing) const = 0;
 	bool m_Metal{ false };
+	bool m_Reflects{ false };
+	bool m_Refracts{ false };
 };
