@@ -268,7 +268,7 @@ bool TriangleMesh::TriangleHit(const Ray& ray, const Face& face) const
 
 void TriangleMesh::Rotate(float elapsedSec)
 {
-    m_Forward = Elite::MakeRotationY(Elite::ToRadians(45.f*elapsedSec)) * m_Forward;
+    m_Forward = Elite::MakeRotationY(Elite::ToRadians(51.4286f*elapsedSec)) * m_Forward;
     RecalculateTranformation();
 }
 

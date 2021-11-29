@@ -65,14 +65,14 @@ int main(int argc, char* args[])
 	TriangleMesh* pBunny{ new TriangleMesh{ "teapot.obj", new LambertCookTorrance{ true, 0.6f, Elite::RGBColor{0.955f, 0.638f, 0.538f} }, {0.f, 0.f, 0.f}, {0.f, 0.f, 1.f}, CullingMode::None }};
 	ObjectManager::GetInstance()->AddTriangleMesh(pBunny);
 #else
-	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{-2.5f, 1.f, 0.f}, 1.f, new LambertCookTorrance{ false, 0.1f} });
+	/*ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{-2.5f, 1.f, 0.f}, 1.f, new LambertCookTorrance{ false, 0.1f} });
 	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{0.f, 1.f, 0.f}, 1.f, new LambertCookTorrance{ false, 0.6f } });
 	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{2.5f, 1.f, 0.f}, 1.f, new LambertCookTorrance{ false, 1.f } });
 	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{-2.5f, 3.f, 0.f}, 1.f, new LambertCookTorrance{ true, 0.1f, Elite::RGBColor{0.955f, 0.638f, 0.538f} } });
-	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{0.f, 3.f, 0.f}, 1.f, new LambertCookTorrance{ true, 0.6f, Elite::RGBColor{0.955f, 0.638f, 0.538f} } });
-	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{2.5f, 3.f, 0.f}, 1.f, new LambertCookTorrance{ true, 1.f, Elite::RGBColor{0.955f, 0.638f, 0.538f} } });
-	TriangleMesh* pTriangle0{ new TriangleMesh{ "tri1.obj", new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}}, {3.f, 5.f, 0.f}, {0.f, 0.f, 1.f}, CullingMode::Front } };
-	TriangleMesh* pTriangle1{ new TriangleMesh{ "tri1.obj", new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}}, {0.f, 5.f, 0.f}, {0.f, 0.f, 1.f}, CullingMode::Back } };
+	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{0.f, 3.f, 0.f}, 1.f, new LambertCookTorrance{ true, 0.6f, Elite::RGBColor{0.955f, 0.638f, 0.538f} } });*/
+	ObjectManager::GetInstance()->AddSphere(new Sphere{ Elite::FPoint3{2.5f, 4.f, 0.f}, 1.f, new LambertCookTorrance{ true, 1.f, Elite::RGBColor{0.955f, 0.638f, 0.538f} } });
+	TriangleMesh* pTriangle0{ new TriangleMesh{ "tri1.obj", new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}}, {3.f, 5.f, 0.f}, {0.f, 0.f, 1.f}, CullingMode::None } };
+	TriangleMesh* pTriangle1{ new TriangleMesh{ "tri1.obj", new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}}, {0.f, 5.f, 0.f}, {0.f, 0.f, 1.f}, CullingMode::None } };
 	TriangleMesh* pTriangle2{ new TriangleMesh{ "tri1.obj", new LambertMaterial{Elite::RGBColor{0.6f, 0.6f, 0.6f}, Elite::RGBColor{1.f,1.f,1.f}}, {-3.f, 5.f, 0.f}, {0.f, 0.f, 1.f}, CullingMode::None } };
 	ObjectManager::GetInstance()->AddTriangleMesh(pTriangle0);
 	ObjectManager::GetInstance()->AddTriangleMesh(pTriangle1);

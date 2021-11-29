@@ -322,11 +322,16 @@ Elite::RGBColor Elite::Renderer::ShootRay(const Ray& ray, const std::vector<Rend
 	return color;
 }
 
-float Elite::Renderer::Fresnel(const Elite::FVector3& incomingDirection, const Elite::FVector3& surfaceNormal, const float refractionIdxBefore, const float refractionIdxAfter)
+float Elite::Renderer::Fresnel(const Elite::FVector3& incomingDirection, const Elite::FVector3& surfaceNormal,  float refractionIdxBefore,  float refractionIdxAfter)
 {
 	float cosIncoming = Elite::Clamp(Elite::Dot(incomingDirection, surfaceNormal), -1.f, 1.f);
+
+	if (cosIncoming > 0)
+	{
+		refractionIdxAfter = 1.f;
+	}
 	// Compute sin using Snells law
-	float sinOutgoing = (refractionIdxAfter / refractionIdxBefore) * sqrtf(std::max(0.f, 1 - cosIncoming * cosIncoming));
+	float sinOutgoing = (refractionIdxBefore / refractionIdxAfter) * sqrtf(std::max(0.f, 1 - cosIncoming * cosIncoming));
 
 	if (sinOutgoing > 1)
 	{
@@ -335,24 +340,26 @@ float Elite::Renderer::Fresnel(const Elite::FVector3& incomingDirection, const E
 	else
 	{
 		float cosOutgoing = sqrtf(std::max(0.f, 1 - sinOutgoing * sinOutgoing));
-		cosOutgoing = fabsf(cosOutgoing);
+		cosIncoming = fabsf(cosIncoming);
 		float fresnelEq1 = ((refractionIdxAfter * cosIncoming) - (refractionIdxBefore * cosOutgoing)) / ((refractionIdxAfter * cosIncoming) + (refractionIdxBefore * cosOutgoing));
 		float fresnelEq2 = ((refractionIdxBefore * cosIncoming) - (refractionIdxAfter * cosOutgoing)) / ((refractionIdxBefore * cosIncoming) + (refractionIdxAfter * cosOutgoing));
 		return (fresnelEq1 * fresnelEq1 + fresnelEq2 * fresnelEq2) / 2; // transmittance is 1 - fresnelRatio
 	}
 }
 
-Elite::FVector3 Elite::Renderer::Refract(const Elite::FVector3& incomingDirection, const Elite::FVector3& surfaceNormal, const float refractionIdxBefore, const float refractionIdxAfter)
+Elite::FVector3 Elite::Renderer::Refract(const Elite::FVector3& incomingDirection, const Elite::FVector3& surfaceNormal,  float refractionIdxBefore,  float refractionIdxAfter)
 {
 	float cosIncoming = Elite::Clamp(Elite::Dot(incomingDirection, surfaceNormal), -1.f, 1.f);
 
 	Elite::FVector3 refracted = surfaceNormal;
 
-	if (cosIncoming)
+	if (cosIncoming < 0)
+	{
 		cosIncoming = -cosIncoming;
+	}
 	else
 		refracted = -refracted;
-
+	
 	float refractionIdxRatio = refractionIdxBefore / refractionIdxAfter;
 
 	float k = 1 - refractionIdxRatio * refractionIdxRatio * (1 - cosIncoming * cosIncoming);

@@ -62,8 +62,8 @@ namespace Elite
 
 		Elite::RGBColor ShootRay(const Ray& ray, const std::vector<RenderObject*>& objects, const std::vector<Light*>& lights, float refractionIdx, int bounce);
 
-		float Fresnel(const Elite::FVector3& incomingDirection, const Elite::FVector3& surfaceNormal, const float refractionIdxBefore, const float refractionIdxAfter);
-		Elite::FVector3 Refract(const Elite::FVector3& incomingDirection, const Elite::FVector3& surfaceNormal, const float refractionIdxBefore, const float refractionIdxAfter);
+		float Fresnel(const Elite::FVector3& incomingDirection, const Elite::FVector3& surfaceNormal,  float refractionIdxBefore,  float refractionIdxAfter);
+		Elite::FVector3 Refract(const Elite::FVector3& incomingDirection, const Elite::FVector3& surfaceNormal,  float refractionIdxBefore,  float refractionIdxAfter);
 
 		SDL_Window* m_pWindow = nullptr;
 		SDL_Surface* m_pFrontBuffer = nullptr;

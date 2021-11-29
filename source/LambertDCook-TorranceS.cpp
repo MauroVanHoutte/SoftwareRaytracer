@@ -7,6 +7,8 @@ LambertCookTorrance::LambertCookTorrance(bool metalness, float roughness, const 
 {
 	m_Metal = metalness;
 	m_Reflects = metalness;
+	m_Refracts = true;
+	m_RefractionIndex = 1.3f;
 }
 
 Elite::RGBColor LambertCookTorrance::Shade(const HitRecord& hitRecord, const Elite::FVector3& incoming, const Elite::FVector3& outgoing) const
@@ -22,3 +24,4 @@ Elite::RGBColor LambertCookTorrance::Shade(const HitRecord& hitRecord, const Eli
 
 	return diffuseReflectance * BRDF::Lambert(diffuseReflectance, Elite::RGBColor{1.f, 1.f, 1.f}) + fresnel * specularReflection;
 }
+
