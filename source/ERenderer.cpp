@@ -23,6 +23,7 @@
 Elite::Renderer::Renderer(SDL_Window * pWindow)
 	:m_HardShadowsEnabled{false}
 	, m_RenderMode{RenderMode::All}
+	, m_ClearColor{0.529f, 0.808f, 0.922f}
 {
 	//Initialize
 	m_pWindow = pWindow;
@@ -122,9 +123,9 @@ void Elite::Renderer::ResetBackbuffer()
 		for (uint32_t c = 0; c < m_Width; c++) //resetting color
 		{
 			m_pBackBufferPixels[c + (r * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
-				static_cast<uint8_t>(135),
-				static_cast<uint8_t>(206),
-				static_cast<uint8_t>(235));
+				static_cast<uint8_t>(m_ClearColor.r)*255,
+				static_cast<uint8_t>(m_ClearColor.g)*255,
+				static_cast<uint8_t>(m_ClearColor.b)*255);
 		}
 	}
 }
@@ -219,45 +220,52 @@ void Elite::Renderer::RenderScreenPortion(const CameraData& cameraData, const st
 			SetupRay(ray, row, col, cameraData);
 			firstHit.hit = false;
 			firstHit.t = ray.tMax;
-
 			Elite::RGBColor pixelColor{ 0.f, 0.f, 0.f };
-			for (const RenderObject* object : objectVector) // checking if the ray intersects with any objects
-			{
-				object->Hit(ray, firstHit); // keeping the hitrecord of object closest to the ray origin
-			}
-			if (firstHit.hit)
-			{
-				CalculateIrradiance(lightVector, objectVector, shadowRay, firstHit, ray, pixelColor); //counting up Radiance of all lights
-				int bounces{ 0 };
-				while (bounces < m_MaxReflectionBounces)
-				{
-					++bounces;
-					Ray reflectRay{};
-					HitRecord reflectHit{ false, Elite::FPoint3{0.f, 0.f, 0.f}, reflectRay.tMax, Elite::FVector3{0.f, 0.f, 0.f}, nullptr };
-					reflectRay.direction = Elite::Reflect(ray.direction, firstHit.normal);
-					reflectRay.origin = firstHit.pIntersect;
-					reflectRay.tMin = 0.01f;
-					for (const RenderObject* object : objectVector)
-					{
-						object->Hit(reflectRay, reflectHit);
-					}
-					if (reflectHit.hit)
-					{
-						Elite::RGBColor reflectColor;
-						CalculateIrradiance(lightVector, objectVector, shadowRay, reflectHit, reflectRay, reflectColor);
-						pixelColor += reflectColor * 0.1f; //arbitrary 0.1 here, need to find a formula that decides the value
-						firstHit = reflectHit;
-					}
-					else
-						break;
-				}
-				pixelColor.MaxToOne();
+			
+			pixelColor = ShootRay(ray, objectVector, lightVector, 1, 0);
 
-				m_pBackBufferPixels[col + (row * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
-					static_cast<uint8_t>(pixelColor.r * 255),
-					static_cast<uint8_t>(pixelColor.g * 255),
-					static_cast<uint8_t>(pixelColor.b * 255));
-			}
+			m_pBackBufferPixels[col + (row * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+						static_cast<uint8_t>(pixelColor.r * 255),
+						static_cast<uint8_t>(pixelColor.g * 255),
+						static_cast<uint8_t>(pixelColor.b * 255));
+
+			//for (const RenderObject* object : objectVector) // checking if the ray intersects with any objects
+			//{
+			//	object->Hit(ray, firstHit); // keeping the hitrecord of object closest to the ray origin
+			//}
+			//if (firstHit.hit)
+			//{
+			//	CalculateIrradiance(lightVector, objectVector, shadowRay, firstHit, ray, pixelColor); //counting up Radiance of all lights
+			//	int bounces{ 0 };
+			//	while (bounces < m_MaxReflectionBounces)
+			//	{
+			//		++bounces;
+			//		Ray reflectRay{};
+			//		HitRecord reflectHit{ false, Elite::FPoint3{0.f, 0.f, 0.f}, reflectRay.tMax, Elite::FVector3{0.f, 0.f, 0.f}, nullptr };
+			//		reflectRay.direction = Elite::Reflect(ray.direction, firstHit.normal);
+			//		reflectRay.origin = firstHit.pIntersect;
+			//		reflectRay.tMin = 0.01f;
+			//		for (const RenderObject* object : objectVector)
+			//		{
+			//			object->Hit(reflectRay, reflectHit);
+			//		}
+			//		if (reflectHit.hit)
+			//		{
+			//			Elite::RGBColor reflectColor;
+			//			CalculateIrradiance(lightVector, objectVector, shadowRay, reflectHit, reflectRay, reflectColor);
+			//			pixelColor += reflectColor * 0.1f; //arbitrary 0.1 here, need to find a formula that decides the value
+			//			firstHit = reflectHit;
+			//		}
+			//		else
+			//			break;
+			//	}
+			//	pixelColor.MaxToOne();
+
+			//	m_pBackBufferPixels[col + (row * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+			//		static_cast<uint8_t>(pixelColor.r * 255),
+			//		static_cast<uint8_t>(pixelColor.g * 255),
+			//		static_cast<uint8_t>(pixelColor.b * 255));
+			//}
 		}
 	}
 
@@ -268,7 +276,7 @@ void Elite::Renderer::RenderScreenPortion(const CameraData& cameraData, const st
 	m_FinishedJobs[threadId] = true;
 }
 
-Elite::RGBColor Elite::Renderer::ShootRay(const Ray& ray, const std::vector<RenderObject*>& objects, const std::vector<Light*>& lights, float refractionIdx, int& bounce)
+Elite::RGBColor Elite::Renderer::ShootRay(const Ray& ray, const std::vector<RenderObject*>& objects, const std::vector<Light*>& lights, float refractionIdx, int bounce)
 {
 	Ray shadowRay{ {}, {} };
 	HitRecord firstHit{ false, Elite::FPoint3{0.f, 0.f, 0.f}, ray.tMax, Elite::FVector3{0.f, 0.f, 0.f}, nullptr };
@@ -277,9 +285,77 @@ Elite::RGBColor Elite::Renderer::ShootRay(const Ray& ray, const std::vector<Rend
 	{
 		object->Hit(ray, firstHit); // keeping the hitrecord of object closest to the ray origin
 	}
-	if (true)
+
+	if (!firstHit.hit)
+		return m_ClearColor;
+
+	Elite::RGBColor color;
+	CalculateIrradiance(lights, objects, shadowRay, firstHit, ray, color);
+
+	if (firstHit.pMaterial->m_Reflects && bounce < m_MaxReflectionBounces)
 	{
 
+		Elite::FVector3 reflectDireciton = Elite::Reflect(ray.direction, firstHit.normal);
+		
+		Ray reflectRay = Ray(firstHit.pIntersect, reflectDireciton);
+
+		auto reflectColor = color + ShootRay(reflectRay, objects, lights, refractionIdx, bounce + 1) * 0.5f;
+		Elite::RGBColor transmittedColor;
+		if (firstHit.pMaterial->m_Refracts)
+		{
+			float reflectanceRatio = Fresnel(ray.direction, firstHit.normal, refractionIdx, firstHit.pMaterial->m_RefractionIndex);
+
+			Elite::FVector3 refractDirection = Refract(ray.direction, firstHit.normal, refractionIdx, firstHit.pMaterial->m_RefractionIndex);
+			Ray refractRay = Ray(firstHit.pIntersect, refractDirection);
+			transmittedColor = ShootRay(refractRay, objects, lights, firstHit.pMaterial->m_RefractionIndex, bounce + 1);
+			Elite::RGBColor color{ reflectColor * reflectanceRatio + transmittedColor * (1 - reflectanceRatio) };
+			color.MaxToOne();
+			return color;
+		}
+
+		reflectColor.MaxToOne();
+		return reflectColor;
 	}
+
 	
+	color.MaxToOne();
+	return color;
+}
+
+float Elite::Renderer::Fresnel(const Elite::FVector3& incomingDirection, const Elite::FVector3& surfaceNormal, const float refractionIdxBefore, const float refractionIdxAfter)
+{
+	float cosIncoming = Elite::Clamp(Elite::Dot(incomingDirection, surfaceNormal), -1.f, 1.f);
+	// Compute sin using Snells law
+	float sinOutgoing = (refractionIdxAfter / refractionIdxBefore) * sqrtf(std::max(0.f, 1 - cosIncoming * cosIncoming));
+
+	if (sinOutgoing > 1)
+	{
+		return 1; // total reflection 
+	}
+	else
+	{
+		float cosOutgoing = sqrtf(std::max(0.f, 1 - sinOutgoing * sinOutgoing));
+		cosOutgoing = fabsf(cosOutgoing);
+		float fresnelEq1 = ((refractionIdxAfter * cosIncoming) - (refractionIdxBefore * cosOutgoing)) / ((refractionIdxAfter * cosIncoming) + (refractionIdxBefore * cosOutgoing));
+		float fresnelEq2 = ((refractionIdxBefore * cosIncoming) - (refractionIdxAfter * cosOutgoing)) / ((refractionIdxBefore * cosIncoming) + (refractionIdxAfter * cosOutgoing));
+		return (fresnelEq1 * fresnelEq1 + fresnelEq2 * fresnelEq2) / 2; // transmittance is 1 - fresnelRatio
+	}
+}
+
+Elite::FVector3 Elite::Renderer::Refract(const Elite::FVector3& incomingDirection, const Elite::FVector3& surfaceNormal, const float refractionIdxBefore, const float refractionIdxAfter)
+{
+	float cosIncoming = Elite::Clamp(Elite::Dot(incomingDirection, surfaceNormal), -1.f, 1.f);
+
+	Elite::FVector3 refracted = surfaceNormal;
+
+	if (cosIncoming)
+		cosIncoming = -cosIncoming;
+	else
+		refracted = -refracted;
+
+	float refractionIdxRatio = refractionIdxBefore / refractionIdxAfter;
+
+	float k = 1 - refractionIdxRatio * refractionIdxRatio * (1 - cosIncoming * cosIncoming);
+
+	return refractionIdxRatio * incomingDirection + (refractionIdxRatio * cosIncoming - sqrtf(k)) * refracted;
 }

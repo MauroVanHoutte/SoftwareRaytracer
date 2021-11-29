@@ -14,4 +14,5 @@ public:
 	bool m_Metal{ false };
 	bool m_Reflects{ false };
 	bool m_Refracts{ false };
+	float m_RefractionIndex{ 1.0f };
 };

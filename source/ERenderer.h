@@ -60,7 +60,10 @@ namespace Elite
 
 		void RenderScreenPortion(const CameraData& cameraData, const std::vector<RenderObject*>& objectVector, const std::vector<Light*>& lightVector, int startRow, int jobRows, int threadId);
 
-		Elite::RGBColor ShootRay(const Ray& ray, const std::vector<RenderObject*>& objects, const std::vector<Light*>& lights, float refractionIdx, int& bounce);
+		Elite::RGBColor ShootRay(const Ray& ray, const std::vector<RenderObject*>& objects, const std::vector<Light*>& lights, float refractionIdx, int bounce);
+
+		float Fresnel(const Elite::FVector3& incomingDirection, const Elite::FVector3& surfaceNormal, const float refractionIdxBefore, const float refractionIdxAfter);
+		Elite::FVector3 Refract(const Elite::FVector3& incomingDirection, const Elite::FVector3& surfaceNormal, const float refractionIdxBefore, const float refractionIdxAfter);
 
 		SDL_Window* m_pWindow = nullptr;
 		SDL_Surface* m_pFrontBuffer = nullptr;
@@ -68,9 +71,10 @@ namespace Elite
 		uint32_t* m_pBackBufferPixels = nullptr;
 		uint32_t m_Width = 0;
 		uint32_t m_Height = 0;
-		int m_MaxReflectionBounces = 0;
+		int m_MaxReflectionBounces = 5;
 		bool m_HardShadowsEnabled;
 		RenderMode m_RenderMode;
+		Elite::RGBColor m_ClearColor;
 
 		std::vector<bool> m_FinishedJobs;
 		std::mutex m_FinishedJobsMutex;

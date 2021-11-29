@@ -6,6 +6,7 @@ LambertCookTorrance::LambertCookTorrance(bool metalness, float roughness, const 
 	, m_Albedo{albedo}
 {
 	m_Metal = metalness;
+	m_Reflects = metalness;
 }
 
 Elite::RGBColor LambertCookTorrance::Shade(const HitRecord& hitRecord, const Elite::FVector3& incoming, const Elite::FVector3& outgoing) const
